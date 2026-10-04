@@ -1,1 +1,1 @@
-symbol,type,entry_date,entry_price,exit_date,exit_price,shares,reason,pnl_ils,pnl_pct,r_multiple
+symbol,type,entry_date,entry_price,exit_date,exit_price,shares,cost_ils,proceeds_ils,pnl_ils,pnl_pct,r_multiple,days,entry_reason,exit_reason

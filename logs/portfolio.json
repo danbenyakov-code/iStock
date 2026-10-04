@@ -1,0 +1,13 @@
+{
+ "start_capital": 50000,
+ "start_date": "2026-10-04",
+ "cash": 50000,
+ "peak": 50000,
+ "bench_start": {
+  "TA": 4218.25,
+  "US": 769.6400146484375
+ },
+ "done_date": "2026-10-04",
+ "done_tg": [],
+ "done_cl": []
+}

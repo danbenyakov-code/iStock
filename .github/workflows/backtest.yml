@@ -1,12 +1,8 @@
-name: Daily scan
+name: Backtest
 on:
-  schedule:
-    - cron: "0 22 * * 1-5"   # 01:00 לפי שעון ישראל, אחרי סגירת שני השווקים
   workflow_dispatch:
-permissions:
-  contents: write
 jobs:
-  scan:
+  backtest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,15 +10,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: python bot.py
+      - run: python backtest.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - name: Save logs
-        run: |
-          git config user.name "trading-bot"
-          git config user.email "trading-bot@users.noreply.github.com"
-          mkdir -p logs && git add logs/
-          git diff --cached --quiet || git commit -m "log $(date -u +%F)"
-          git push

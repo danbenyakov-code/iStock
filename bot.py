@@ -76,9 +76,12 @@ def send(text):
     if not token or not chat:
         print(text)
         return
-    for k in range(0, len(text), 4000):
-        requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                      data={"chat_id": chat, "text": text[k:k + 4000]}, timeout=30)
+    print(text)                                   # תמיד גם ביומן של GitHub
+    for k in range(0, len(text), 3500):
+        r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                          data={"chat_id": chat, "text": text[k:k + 3500]}, timeout=30)
+        if r.status_code != 200:                  # כישלון שליחה = שגיאה אדומה, לא שקט
+            raise RuntimeError(f"Telegram error {r.status_code}: {r.text[:300]}")
 
 
 def fmt(sym, p):

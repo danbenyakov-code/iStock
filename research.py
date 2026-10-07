@@ -10,7 +10,7 @@ def fmt(sym, p):
     return f"{p:,.1f} אג'" if market_of(sym) == "TA" else f"${p:,.2f}"
 
 
-def analyze(sym, d, t, market_ok, held, signaled, idx_df, rmap):
+def analyze(sym, d, t, market_ok, held, signaled, idx_df, rmap, light=False):
     row = d.iloc[-1]
     close, sma200, sma50 = row["Close"], row["sma200"], row["sma50"]
     rsi, high20 = row["rsi"], row["high20"]
@@ -19,6 +19,22 @@ def analyze(sym, d, t, market_ok, held, signaled, idx_df, rmap):
     above = close / sma200 - 1
     uptrend = close > sma200 and sma50 > sma200
     rs = relative_strength(d, idx_df)
+    if light:                                     # סיווג מהיר, בלי קריאות רשת
+        if sym in held:
+            cat = ORDER[0]
+        elif sym in signaled:
+            cat = ORDER[1]
+        elif not market_ok:
+            cat = ORDER[4]
+        elif close < sma200:
+            cat = ORDER[5]
+        elif (uptrend and rsi < 40) or dist > -0.03:
+            cat = ORDER[2]
+        elif uptrend:
+            cat = ORDER[3]
+        else:
+            cat = ORDER[5]
+        return {"sym": sym, "cat": cat, "rs": rs}
     q = quality(sym)
     de = days_to_next_earnings(earnings_dates(sym), t)
 
@@ -62,18 +78,38 @@ def analyze(sym, d, t, market_ok, held, signaled, idx_df, rmap):
     return {"sym": sym, "cat": cat, "text": text + f"\n  → {verdict}", "short": short}
 
 
-def build(t, ind, market, idx_dfs, held, signaled, rmap):
-    notes = []
-    for sym in WATCHLIST_TA + WATCHLIST_US:
+def build(t, ind, market, idx_dfs, held, signaled, rmap, symbols=None):
+    symbols = symbols or (WATCHLIST_TA + WATCHLIST_US)
+    light = []
+    for sym in symbols:
         d = ind(sym)
-        if d is None or len(d) < 2:
+        if d is None or len(d) < 2 or pd_isna(d["sma200"].iloc[-1]):
             continue
         m = market_of(sym)
-        notes.append(analyze(sym, d, t, market[m], held, signaled, idx_dfs[m], rmap))
-    md = [f"# מחברת מחקר | {t:%d/%m/%Y}", ""]
+        light.append((analyze(sym, d, t, market[m], held, signaled, idx_dfs[m], rmap, light=True), d))
+    wide = len(symbols) > 40
+    near = sorted([x for x in light if x[0]["cat"] == ORDER[2]], key=lambda x: x[0]["rs"], reverse=True)
+    detail = [x for x in light if x[0]["cat"] in ORDER[:2]] + near[:RESEARCH_MAX]
+    if not wide:
+        detail = light
+    notes = []
+    for x, d in detail:
+        m = market_of(x["sym"])
+        notes.append(analyze(x["sym"], d, t, market[m], held, signaled, idx_dfs[m], rmap))
+    md = [f"# מחברת מחקר | {t:%d/%m/%Y}", "",
+          f"נסרקו {len(light)} מניות." + (f" מפורטות: בתיק, איתותים, ו-{min(len(near), RESEARCH_MAX)} "
+                                         f"הקרובות ביותר לאיתות (לפי חוזק יחסי)." if wide else ""), ""]
     for cat in ORDER:
         group = [n for n in notes if n["cat"] == cat]
+        count = sum(1 for x, _ in light if x["cat"] == cat)
         if group:
-            md += [f"## {cat} ({len(group)})", ""] + [f"- {n['text']}" for n in group] + [""]
-    watch = [f"{n['sym']} ({n['short']})" for n in notes if n["cat"] == ORDER[2]]
+            extra = f" (מתוך {count})" if count > len(group) else ""
+            md += [f"## {cat} ({len(group)}){extra}", ""] + [f"- {n['text']}" for n in group] + [""]
+        elif count:
+            md += [f"## {cat}: {count} מניות", ""]
+    watch = [f"{n['sym']} ({n['short']})" for n in notes if n["cat"] == ORDER[2]][:8]
     return notes, "\n".join(md), watch
+
+
+def pd_isna(x):
+    return x != x

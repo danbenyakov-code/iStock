@@ -1,0 +1,45 @@
+name: My orders
+on:
+  schedule:
+    - cron: "*/30 6-20 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: manual-orders
+  cancel-in-progress: false
+jobs:
+  orders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check inbox
+        id: inbox
+        run: python3 check_inbox.py >> "$GITHUB_OUTPUT"
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      - uses: actions/setup-python@v5
+        if: steps.inbox.outputs.work == '1'
+        with:
+          python-version: "3.12"
+          cache: pip
+      - if: steps.inbox.outputs.work == '1'
+        run: pip install -r requirements.txt
+      - if: steps.inbox.outputs.work == '1'
+        run: python manual.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Save logs
+        if: steps.inbox.outputs.work == '1'
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          mkdir -p logs && git add logs/
+          git diff --cached --quiet && exit 0
+          git commit -m "orders $(date -u +%F-%H%M)"
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin main && git push && exit 0
+            sleep 5
+          done
+          exit 1

@@ -10,6 +10,8 @@ from strategy import *
 from insights import *
 import research
 import ai
+import universe
+import manual
 
 NAMES = {"post_earnings": "תגובה חזקה לדוח", "pullback": "קנייה בתיקון", "breakout": "פריצה"}
 LOG = "logs"
@@ -24,6 +26,16 @@ TRADE_F = ["symbol", "type", "entry_date", "entry_price", "exit_date", "exit_pri
 EQ_F = ["date", "cash", "invested", "equity", "day_pct", "total_pct", "drawdown_pct", "positions"]
 EVENT_F = ["date", "mode", "event", "symbol", "details"]
 _cache, _ind = {}, {}
+UNIVERSE = list(WATCHLIST_TA) + list(WATCHLIST_US)
+
+
+def liquid(sym, d, fx):
+    """מסנן נזילות: מחזור יומי ממוצע ומחיר מינימלי."""
+    tail = d.iloc[-20:]
+    turnover = float((tail["Close"] * tail["Volume"]).mean())
+    if market_of(sym) == "TA":
+        return turnover / 100 >= MIN_TURNOVER_ILS_TA
+    return turnover * fx >= MIN_TURNOVER_ILS_US and float(d["Close"].iloc[-1]) >= MIN_PRICE_US
 
 
 # ===================== כלים =====================
@@ -156,9 +168,9 @@ def entry_reason(sig, d, i, sym, rs, rank, q, de):
             f"{quality_text(q)}. סקטור: {q['sector']}. דוח הבא: {nxt}")
 
 
-def find_candidates(t, taken, market, idx_dfs, mode):
+def find_candidates(t, taken, market, idx_dfs, mode, fx=3.7):
     cands, blocked = [], []
-    for sym in WATCHLIST_TA + WATCHLIST_US:
+    for sym in UNIVERSE:
         if sym in taken:
             continue
         d = ind(sym)
@@ -167,10 +179,19 @@ def find_candidates(t, taken, market, idx_dfs, mode):
         if (t - d.index[-1]).days > 1 or not market[market_of(sym)]:
             continue
         i = len(d) - 1
-        edates = earnings_dates(sym)
-        sig = entry_signal(d, i, reaction_days(edates, d.index))
+        if not liquid(sym, d, fx):
+            continue
+        sig = entry_signal(d, i, None)
+        row, prev = d.iloc[i], d.iloc[i - 1]
+        gap = row["Open"] > prev["Close"] * 1.04 and row["vol20"] > 0 and row["Volume"] > 2 * row["vol20"]
+        edates = None
+        if gap:                                   # אולי יום דוח: בודקים רק אז (חוסך זמן)
+            edates = earnings_dates(sym)
+            sig = entry_signal(d, i, reaction_days(edates, d.index)) or sig
         if not sig:
             continue
+        if edates is None:
+            edates = earnings_dates(sym)
         de = days_to_next_earnings(edates, t)
         if sig != "post_earnings" and de is not None and de <= EARNINGS_BLACKOUT_DAYS:
             blocked.append(f"{sym} (דוח בעוד {de} ימים)")
@@ -364,7 +385,7 @@ def run_paper(t, fx, market, idx_dfs, rmap, warnings):
             waiting.append(e)
     pending["entries"] = waiting
     taken = {p["symbol"] for p in positions} | {e["symbol"] for e in waiting}
-    cands, blocked = find_candidates(t, taken, market, idx_dfs, mode)
+    cands, blocked = find_candidates(t, taken, market, idx_dfs, mode, fx)
     orders, cl_orders = [], []
     for c in cands:
         sym = c["sym"]
@@ -427,6 +448,10 @@ def run_paper(t, fx, market, idx_dfs, rmap, warnings):
         L += ["", "🔄 בוצע בפתיחה:"] + done
     if holds:
         L += ["", f"📂 החזקות ({len(holds)}):"] + holds
+    skipped = [o for o in orders if o.startswith("⏭️")]
+    if len(skipped) > 5:                          # בטלגרם מקצרים, ביומן הכול נשמר
+        orders = [o for o in orders if not o.startswith("⏭️")] + skipped[:5] + \
+                 [f"⏭️ ועוד {len(skipped) - 5} איתותים שלא נכנסו (פירוט ב-CHANGELOG)"]
     if exits_tomorrow or orders:
         L += ["", "📝 פקודות לפתיחה הבאה:"] + exits_tomorrow + orders
     else:
@@ -440,7 +465,7 @@ def run_paper(t, fx, market, idx_dfs, rmap, warnings):
               f"הפסד ממוצע {sum(losses) / len(losses) if losses else 0:+,.0f} ₪"]
     signaled = {c["sym"] for c in cands} | {b.split(" ")[0] for b in blocked}
     notes, research_md, watch = research.build(t, ind, market, idx_dfs,
-                                               {p["symbol"] for p in positions}, signaled, rmap)
+                                               {p["symbol"] for p in positions}, signaled, rmap, UNIVERSE)
     if watch:
         L += ["", "👀 קרובות לאיתות: " + ", ".join(watch)]
     ai_text, ai_err = ai.commentary("\n".join(L), research_md)
@@ -518,7 +543,7 @@ def run_real(t, fx, market, idx_dfs, rmap, warnings):
             open_risk += e["risk"]
             L.append(f"🟢 {p['symbol']}: {e['pct']:+.1f}% | עדכן סטופ ל-{fmt(p['symbol'], e['stop'])}")
     cash = max(CAPITAL_ILS - invested, 0)
-    cands, blocked = find_candidates(t, {p["symbol"] for p in positions}, market, idx_dfs, mode)
+    cands, blocked = find_candidates(t, {p["symbol"] for p in positions}, market, idx_dfs, mode, fx)
     for c in cands:
         sh, err = size_order(c["sym"], c["close"], c["stop"], fx, CAPITAL_ILS, cash, open_risk)
         log_event(mode, "ENTRY_SIGNAL", c["sym"], f"{c['sig']} {err or 'ok'}")
@@ -532,7 +557,7 @@ def run_real(t, fx, market, idx_dfs, rmap, warnings):
         L.append("🚫 נחסמו: " + ", ".join(blocked))
     signaled = {c["sym"] for c in cands} | {b.split(" ")[0] for b in blocked}
     _, research_md, watch = research.build(t, ind, market, idx_dfs,
-                                           {p["symbol"] for p in positions}, signaled, rmap)
+                                           {p["symbol"] for p in positions}, signaled, rmap, UNIVERSE)
     if watch:
         L += ["", "👀 קרובות לאיתות: " + ", ".join(watch)]
     L += ["", "תזכורת: אחרי ביצוע, עדכן את positions.csv."]
@@ -545,9 +570,17 @@ def run_real(t, fx, market, idx_dfs, rmap, warnings):
 
 
 def main():
+    global UNIVERSE
     t = today()
+    ta, us = universe.get()
+    held = [r["symbol"] for r in read_csv(F["pos"])] + [r["symbol"] for r in read_csv("positions.csv")]
+    UNIVERSE = sorted(set(ta) | set(us) | set(held))
+    if len(UNIVERSE) > 40:                        # הורדה מרוכזת במקום מניה אחרי מניה
+        _cache.update(universe.bulk_load([s for s in UNIVERSE if s not in _cache]))
     fx, fx_ok = usd_ils_rate()
     warnings = [] if fx_ok else ["לא התקבל שער דולר, הונח 3.7"]
+    if UNIVERSE_MODE == "wide" and len(us) < 300:
+        warnings.append(f"רשימת S&P 500 לא נמשכה, נסרקות {len(us)} מניות ארה\"ב מרשימת גיבוי")
     market, idx_dfs = {}, {}
     for m, sym in MARKET_INDEX.items():
         idx = get(sym)
@@ -557,7 +590,16 @@ def main():
             warnings.append(f"אין נתוני מדד {sym}")
     rmap = reddit_map()
     run = run_paper if PAPER_MODE else run_real
-    for msg in run(t, fx, market, idx_dfs, rmap, warnings):
+    msgs = run(t, fx, market, idx_dfs, rmap, warnings)
+    loaded = sum(1 for s in UNIVERSE if _cache.get(s) is not None)
+    msgs[0] += f"\n\n🔎 נסרקו {loaded} מניות"
+    try:
+        mine = manual.summary_for_daily_report()
+        if mine:
+            msgs.append(mine)
+    except Exception as e:
+        print("manual summary failed:", e)
+    for msg in msgs:
         send(msg)
 
 

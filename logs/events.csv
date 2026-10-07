@@ -1,0 +1,8 @@
+date,mode,event,symbol,details
+2026-10-07,paper,BLOCKED,VST,breakout quality ['חוב']
+2026-10-07,paper,ENTRY_SIGNAL,MRVL,breakout close=287.01 rs=19.4 planned
+2026-10-07,paper,ENTRY_SIGNAL,MRK,pullback close=141.94 rs=8.8 planned
+2026-10-07,paper,ENTRY_SIGNAL,MDLZ,pullback close=59.62 rs=-3.4 planned
+2026-10-07,paper,ENTRY_SIGNAL,CIEN,breakout close=443.65 rs=-3.9 planned
+2026-10-07,paper,ENTRY_SIGNAL,AIZ,pullback close=270.96 rs=-6.7 planned
+2026-10-07,paper,ENTRY_SIGNAL,KVUE,pullback close=17.59 rs=-11.2 planned

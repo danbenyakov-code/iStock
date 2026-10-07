@@ -155,7 +155,9 @@ HELP = ("📘 פקודות לתיק שלי (אפשר גם דרך התפריט / 
         "/cancel: ביטול פקודות שממתינות לפתיחה\n"
         "/status: שווי, רווח ותשואה של שני התיקים\n"
         "/analyze NVDA: ניתוח מלא של מניה (טכני, פונדמנטלי, ודעת הבוט)\n"
-        "אפשר גם בעברית: קנה, מכור, ביטול, מצב.\n\n"
+        "אפשר גם בעברית: קנה, מכור, ביטול, מצב.\n"
+        "רשימה: כתוב 'קנייה' ובשורות הבאות מניה בכל שורה. בלי סכום = חלוקה שווה של המזומן.\n"
+        "אפשר שמות חברות (Nvidia, Tesla, אפל) או סימבולים.\n\n"
         "מניות בת\"א עם הסיומת .TA (למשל LUMI.TA). בלי סיומת = ארה\"ב.\n"
         "הבוט בודק פקודות כל 30 דקות בערך, והמחירים מתעכבים בכ-15 דקות.\n"
         "פקודה מחוץ לשעות המסחר תבוצע כשהשוק ייפתח.")
@@ -178,30 +180,107 @@ def set_commands(state):
     state["commands_v"] = 2
 
 
+# שמות חברות נפוצים -> סימבול (כולל עברית). מוצג תמיד בתשובה, כך שרואים מה הובן.
+ALIASES = {
+    "nvidia": "NVDA", "אנבידיה": "NVDA", "tesla": "TSLA", "טסלה": "TSLA", "apple": "AAPL", "אפל": "AAPL",
+    "microsoft": "MSFT", "מיקרוסופט": "MSFT", "amazon": "AMZN", "אמזון": "AMZN", "google": "GOOGL",
+    "alphabet": "GOOGL", "גוגל": "GOOGL", "meta": "META", "facebook": "META", "netflix": "NFLX",
+    "palantir": "PLTR", "פלנטיר": "PLTR", "sofi": "SOFI", "rocketlab": "RKLB", "rocket lab": "RKLB",
+    "rocket": "RKLB", "broadcom": "AVGO", "marvell": "MRVL", "credo": "CRDO", "arista": "ANET",
+    "applied materials": "AMAT", "palo alto": "PANW", "pan": "PANW", "intel": "INTC", "coinbase": "COIN",
+    "micron": "MU", "oracle": "ORCL", "salesforce": "CRM", "uber": "UBER", "zim": "ZIM", "זים": "ZIM",
+    "s&p": "SPY", "s&p500": "SPY", "sp500": "SPY", "nasdaq": "QQQ", "נאסדק": "QQQ",
+    "לאומי": "LUMI.TA", "פועלים": "POLI.TA", "דיסקונט": "DSCT.TA", "מזרחי": "MZTF.TA",
+    "בזק": "BEZQ.TA", "אלעל": "ELAL.TA", "אל על": "ELAL.TA",
+}
+# מניות שנסחרות גם בת"א וגם בארה"ב: שואלים למה התכוונת
+DUAL = {"TEVA": "טבע", "טבע": "טבע", "NICE": "נייס", "נייס": "נייס", "ESLT": "אלביט", "אלביט": "אלביט",
+        "ELBIT": "אלביט", "TSEM": "טאואר", "טאואר": "טאואר", "TOWER": "טאואר", "NVMI": "נובה", "נובה": "נובה",
+        "ICL": "כיל", "כיל": "כיל", "CAMT": "קמטק", "קמטק": "קמטק"}
+DUAL_SYM = {"טבע": "TEVA", "נייס": "NICE", "אלביט": "ESLT", "טאואר": "TSEM", "נובה": "NVMI", "כיל": "ICL",
+            "קמטק": "CAMT"}
+
+
+def resolve(token):
+    """שם או סימבול -> (סימבול, None) או (None, שאלת הבהרה)."""
+    raw = token.strip().strip(".,;:")
+    key = raw.lower()
+    if key in ALIASES:
+        return ALIASES[key], None
+    up = raw.upper()
+    dual = DUAL.get(up) or DUAL.get(raw)
+    if dual and not up.endswith(".TA"):
+        b = DUAL_SYM[dual]
+        return None, (f"❓ {raw}: {dual} נסחרת גם בת\"א וגם בארה\"ב. למה התכוונת?\n"
+                      f"/buy {b}.TA (ת\"א, בשקלים) או /buy {b} (ארה\"ב, בדולרים)")
+    if re.fullmatch(r"[A-Z0-9.\-^=]{1,12}", up):
+        return up, None
+    return None, f"❓ לא זיהיתי את \"{raw}\". נסה עם הסימבול, למשל NVDA או TEVA.TA."
+
+
+BATCH_HEAD = r"^/?(קנייה|קניה|קנה|קני|buy|מכירה|מכור|sell)$"
+
+
+def parse_batch(t):
+    """רשימה: שורה ראשונה 'קנייה' ואחריה מניה בכל שורה, או 'קנה A B C' בשורה אחת."""
+    lines = [x.strip() for x in t.splitlines() if x.strip()]
+    if not lines:
+        return None
+    head = lines[0].split()
+    if not re.match(BATCH_HEAD, head[0], re.IGNORECASE):
+        return None
+    side = "sell" if head[0].lower().lstrip("/") in ("מכירה", "מכור", "sell") else "buy"
+    items = []
+    rest = [" ".join(head[1:])] if len(head) > 1 else []
+    rest += lines[1:]
+    for ln in rest:
+        parts = ln.replace("₪", " ש\"ח").split()
+        m = re.match(r"^(.+?)\s+(\d+(?:\.\d+)?)\s*(ש\"?ח|nis|ils)?$", " ".join(parts), re.IGNORECASE)
+        if m:
+            items.append((m.group(1), float(m.group(2)), bool(m.group(3))))
+        elif len(lines) == 1:                         # 'קנה A B C' בשורה אחת
+            items += [(p, None, False) for p in parts]
+        else:
+            items.append((" ".join(parts), None, False))
+    if len(items) < 2:
+        return None
+    return {"cmd": "batch", "side": side, "items": items}
+
+
 def parse(text):
+    t0 = text.strip().replace(",", "")
+    t0 = re.sub(r"^(/\w+)@\w+", r"\1", t0)
+    b = parse_batch(t0)
+    if b:
+        return b
     t = text.strip().replace("₪", "").replace(",", "")
     t = re.sub(r"^(/\w+)@\w+", r"\1", t)          # /buy@MyBot -> /buy
     low = t.lower()
     if low in ("/buy", "/sell", "קנה", "מכור", "/analyze", "נתח", "ניתוח"):
         return {"cmd": "usage"}
-    m = re.match(r"^/?(analyze|נתח|ניתוח)\s+([A-Za-z0-9.\-^=]+)$", t, re.IGNORECASE)
+    m = re.match(r"^/?(analyze|נתח|ניתוח)\s+(.+)$", t, re.IGNORECASE)
     if m:
-        return {"cmd": "analyze", "sym": m.group(2).upper()}
+        sym, ask = resolve(m.group(2))
+        if ask:
+            return {"cmd": "ask", "text": ask.replace("/buy", "/analyze")}
+        return {"cmd": "analyze", "sym": sym}
     if low in ("מצב", "status", "/status", "תיק", "/start"):
         return {"cmd": "status"}
     if low in ("עזרה", "help", "/help"):
         return {"cmd": "help"}
     if low in ("ביטול", "cancel", "/cancel"):
         return {"cmd": "cancel"}
-    m = re.match(r"^/?(קנה|קני|buy|מכור|sell)\s+([A-Za-z0-9.\-^=]+)(?:\s+(\d+(?:\.\d+)?))?\s*(ש\"?ח|nis|ils)?$",
+    m = re.match(r"^/?(קנה|קני|buy|מכור|sell)\s+([^\s\d][^\s]*)(?:\s+(\d+(?:\.\d+)?))?\s*(ש\"?ח|nis|ils)?$",
                  t, re.IGNORECASE)
     if not m:
         return {"cmd": "unknown"}
     side = "buy" if m.group(1).lower() in ("קנה", "קני", "buy") else "sell"
-    sym = m.group(2).upper()
+    sym, ask = resolve(m.group(2))
+    if ask:
+        return {"cmd": "ask", "text": ask if side == "buy" else ask.replace("/buy", "/sell")}
     num = float(m.group(3)) if m.group(3) else None
     if side == "buy" and num is None:
-        return {"cmd": "unknown"}
+        return {"cmd": "usage"}
     # קנייה: מספר עד 10,000 = כמות מניות, אלא אם צוין ש"ח. מעל 10,000 = סכום (בטעות סביר יותר).
     by_amount = side == "buy" and (bool(m.group(4)) or (num is not None and num > 10_000))
     return {"cmd": side, "sym": sym, "qty": None if by_amount else num, "amount": num if by_amount else None}
@@ -240,7 +319,8 @@ def execute(order, state, pos):
     px_ils = price * rate
 
     if order["cmd"] == "buy":
-        qty = int(order["qty"]) if order.get("qty") else int(order["amount"] / (px_ils * (1 + SIDE_FEE)))
+        qty = int(order["qty"]) if order.get("qty") else \
+            int(min(order["amount"], state["cash"]) / (px_ils * (1 + SIDE_FEE)))
         if qty <= 0:
             return f"❌ הסכום קטן ממחיר מניה אחת של {sym} ({money(px_ils)}).", "rejected"
         value = qty * px_ils
@@ -291,6 +371,55 @@ def execute(order, state, pos):
            f"{icon} רווח/הפסד: {pnl:+,.0f} ₪ ({pnl / cost_part:+.1%})\nמזומן: {money(state['cash'])}")
     changelog(f"🔴 מכירה {sym}: {qty} × {fmt(price, cur)} | {pnl:+,.0f} ₪")
     return txt, "done"
+
+
+def run_batch(o, text, rec, state, pos):
+    """מבצע רשימת פקודות. קנייה בלי סכום = חלוקה שווה של המזומן."""
+    good, notes = [], []
+    for name, num, is_ils in o["items"]:
+        sym, ask = resolve(name)
+        if ask:
+            notes.append(ask if o["side"] == "buy" else ask.replace("/buy", "/sell"))
+        elif sym in [g[0] for g in good]:
+            continue
+        else:
+            good.append((sym, num, is_ils))
+    lines = [f"📋 התקבלה רשימה של {len(o['items'])} פריטים ({'קנייה' if o['side'] == 'buy' else 'מכירה'})"]
+    if o["side"] == "buy":
+        fixed = sum((n if (ils_ or n > 10_000) else 0) for _, n, ils_ in good if n)
+        free = [g for g in good if g[1] is None]
+        share = max(state["cash"] - fixed, 0) / len(free) if free else 0
+        if free:
+            lines.append(f"חלוקה שווה: כ-{money(share)} לכל אחת מ-{len(free)} מניות")
+    done = queued = 0
+    for sym, num, is_ils in good:
+        if o["side"] == "buy":
+            if num is None:
+                order = {"cmd": "buy", "sym": sym, "qty": None, "amount": share}
+            elif is_ils or num > 10_000:
+                order = {"cmd": "buy", "sym": sym, "qty": None, "amount": num}
+            else:
+                order = {"cmd": "buy", "sym": sym, "qty": num, "amount": None}
+        else:
+            order = {"cmd": "sell", "sym": sym, "qty": num, "amount": None}
+        order.update({"text": f"{'/buy' if o['side'] == 'buy' else '/sell'} {sym}"
+                              + (f" {money(order['amount'])}" if order.get("amount") else
+                                 f" {int(num)}" if num else ""), "received": rec})
+        txt, st = execute(order, state, pos)
+        if st == "queued":
+            state["pending"].append(order)
+            queued += 1
+            lines.append(f"⏳ {sym}: ממתינה לפתיחת המסחר")
+        else:
+            append_csv(ORDERS, ORDER_F, {"received": rec, "command": order["text"], "status": st,
+                                          "details": txt.replace("\n", " | ")})
+            done += st == "done"
+            lines.append(txt.split("\n")[0] + (" | " + txt.split("\n")[1] if st == "done" else ""))
+    lines += notes
+    lines.append(f"\nסיכום: {done} בוצעו, {queued} ממתינות לפתיחה, מזומן {money(state['cash'])}")
+    if queued:
+        lines.append("הממתינות יבוצעו בבדיקה הראשונה אחרי פתיחת השוק (ארה\"ב: 16:30 שעון ישראל).")
+    return "\n".join(lines)
 
 
 # ===================== ניתוח מניה =====================
@@ -471,16 +600,20 @@ def main():
         print("setMyCommands failed:", e)
 
     # 1. פקודות שממתינות לפתיחה
-    still = []
+    still, filled = [], []
     for o in state.get("pending", []):
         txt, st = execute(o, state, pos)
         if st == "queued":
             still.append(o)
             continue
-        out.append(f"(פקודה מ-{o['received']}: {o['text']})\n{txt}")
+        filled.append(txt.split("\n")[0].replace("בוצע: ", "") + " | " + txt.split("\n")[1]
+                      if st == "done" else f"{o['text']}: {txt}")
         append_csv(ORDERS, ORDER_F, {"received": o["received"], "command": o["text"], "status": st,
                                       "details": txt.replace("\n", " | ")})
     state["pending"] = still
+    if filled:
+        out.append(f"⏰ השוק נפתח. בוצעו {len(filled)} פקודות שהמתינו:\n" + "\n".join(filled)
+                   + f"\nמזומן שנותר: {money(state['cash'])}")
 
     # 2. הודעות חדשות מטלגרם (רק מהצ'אט שלך)
     me = str(os.environ.get("TELEGRAM_CHAT_ID", ""))
@@ -496,6 +629,12 @@ def main():
         o = parse(text)
         if o["cmd"] == "help":
             out.append(HELP)
+            continue
+        if o["cmd"] == "ask":
+            out.append(o["text"])
+            continue
+        if o["cmd"] == "batch":
+            out.append(run_batch(o, text, rec, state, pos))
             continue
         if o["cmd"] == "analyze":
             try:

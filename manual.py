@@ -154,6 +154,7 @@ HELP = ("📘 פקודות לתיק שלי (אפשר גם דרך התפריט / 
         "/sell TEVA.TA 40: מכירה חלקית\n"
         "/cancel: ביטול פקודות שממתינות לפתיחה\n"
         "/status: שווי, רווח ותשואה של שני התיקים\n"
+        "/analyze NVDA: ניתוח מלא של מניה (טכני, פונדמנטלי, ודעת הבוט)\n"
         "אפשר גם בעברית: קנה, מכור, ביטול, מצב.\n\n"
         "מניות בת\"א עם הסיומת .TA (למשל LUMI.TA). בלי סיומת = ארה\"ב.\n"
         "הבוט בודק פקודות כל 30 דקות בערך, והמחירים מתעכבים בכ-15 דקות.\n"
@@ -163,25 +164,29 @@ HELP = ("📘 פקודות לתיק שלי (אפשר גם דרך התפריט / 
 COMMANDS = [("buy", "קנייה: /buy TEVA.TA 100 או /buy AAPL 5000ש\"ח"),
             ("sell", "מכירה: /sell TEVA.TA או /sell TEVA.TA 40"),
             ("status", "מצב התיק שלי ותיק הבוט"),
+            ("analyze", "ניתוח מניה: /analyze NVDA או /analyze TEVA.TA"),
             ("cancel", "ביטול פקודות ממתינות"),
             ("help", "רשימת הפקודות")]
 
 
 def set_commands(state):
     """רושם את תפריט ה-/ בטלגרם (פעם אחת)."""
-    if state.get("commands_v") == 1 or not os.environ.get("TELEGRAM_TOKEN"):
+    if state.get("commands_v") == 2 or not os.environ.get("TELEGRAM_TOKEN"):
         return
     tg("setMyCommands", commands=json.dumps([{"command": c, "description": d} for c, d in COMMANDS],
                                             ensure_ascii=False))
-    state["commands_v"] = 1
+    state["commands_v"] = 2
 
 
 def parse(text):
     t = text.strip().replace("₪", "").replace(",", "")
     t = re.sub(r"^(/\w+)@\w+", r"\1", t)          # /buy@MyBot -> /buy
     low = t.lower()
-    if low in ("/buy", "/sell", "קנה", "מכור"):
+    if low in ("/buy", "/sell", "קנה", "מכור", "/analyze", "נתח", "ניתוח"):
         return {"cmd": "usage"}
+    m = re.match(r"^/?(analyze|נתח|ניתוח)\s+([A-Za-z0-9.\-^=]+)$", t, re.IGNORECASE)
+    if m:
+        return {"cmd": "analyze", "sym": m.group(2).upper()}
     if low in ("מצב", "status", "/status", "תיק", "/start"):
         return {"cmd": "status"}
     if low in ("עזרה", "help", "/help"):
@@ -286,6 +291,101 @@ def execute(order, state, pos):
            f"{icon} רווח/הפסד: {pnl:+,.0f} ₪ ({pnl / cost_part:+.1%})\nמזומן: {money(state['cash'])}")
     changelog(f"🔴 מכירה {sym}: {qty} × {fmt(price, cur)} | {pnl:+,.0f} ₪")
     return txt, "done"
+
+
+# ===================== ניתוח מניה =====================
+def analyze_text(sym, state, pos):
+    from strategy import load, add_indicators, entry_signal, initial_stop, market_ok_series
+    from insights import (quality, earnings_dates, days_to_next_earnings, reaction_days,
+                          relative_strength, reddit_map, reddit_note)
+    import research
+    from config import MARKET_INDEX, ATR_STOP_MULT, LIMIT_ATR, RISK_PER_TRADE, MAX_POSITION_PCT, \
+        EARNINGS_BLACKOUT_DAYS
+
+    df = load(sym, period="2y")
+    if df is None:
+        return f"❓ אין מספיק נתונים על {sym} (צריך שנה של מסחר לפחות). מניות בת\"א עם .TA."
+    d = add_indicators(df)
+    i, row = len(d) - 1, d.iloc[-1]
+    c = float(row["Close"])
+    q = quote(sym)
+    cur = q[1] if q else ("ILA" if sym.endswith(".TA") else "USD")
+    rate = to_ils_rate(cur) or 1.0
+    mkt = "TA" if sym.endswith(".TA") else "US"
+    idx = load(MARKET_INDEX[mkt], period="2y")
+    mkt_ok = bool(market_ok_series(idx).iloc[-1]) if idx is not None else False
+
+    def chg(n):
+        return f"{c / float(d['Close'].iloc[-1 - n]) - 1:+.1%}" if len(d) > n else "?"
+    hi, lo = float(d["High"].iloc[-252:].max()), float(d["Low"].iloc[-252:].min())
+
+    try:
+        import yfinance as _yf
+        info = _yf.Ticker(sym).info or {}
+    except Exception:
+        info = {}
+    qa = quality(sym)
+    ed = earnings_dates(sym)
+    de = days_to_next_earnings(ed, pd.Timestamp(now().date()))
+    sig = entry_signal(d, i, reaction_days(ed, d.index))
+    note = research.analyze(sym, d, pd.Timestamp(now().date()), mkt_ok, set(pos), {sym} if sig else set(),
+                            idx, reddit_map())
+    verdict = note["text"].split("→", 1)[-1].strip()
+
+    L = [f"🔬 ניתוח {sym}" + (f" | {info.get('shortName')}" if info.get("shortName") else ""),
+         f"מחיר: {fmt(c, cur)} | יום {chg(1)} | חודש {chg(21)} | 3 חודשים {chg(63)} | שנה {chg(252)}",
+         f"טווח 52 שבועות: {fmt(lo, cur)} עד {fmt(hi, cur)} ({c / hi - 1:+.0%} מהשיא)", "",
+         "📈 טכני:",
+         f"• מגמה: {'עולה' if c > row['sma200'] and row['sma50'] > row['sma200'] else 'יורדת' if c < row['sma200'] else 'לא ברורה'}"
+         f" | {c / row['sma50'] - 1:+.1%} מממוצע 50 | {c / row['sma200'] - 1:+.1%} מממוצע 200",
+         f"• RSI: {row['rsi']:.0f}" + (" (קנוי יתר)" if row["rsi"] > 70 else " (מכור יתר)" if row["rsi"] < 30 else ""),
+         f"• תנודתיות יומית (ATR): {row['atr'] / c:.1%} | מחזור היום פי {row['Volume'] / row['vol20']:.1f} מהממוצע"
+         if row["vol20"] else f"• תנודתיות יומית (ATR): {row['atr'] / c:.1%}",
+         f"• חוזק יחסי 3 חודשים מול המדד: {relative_strength(d, idx):+.1f}%",
+         f"• מצב השוק ({MARKET_INDEX[mkt]}): {'✅ מעל ממוצע 200' if mkt_ok else '⛔ מתחת לממוצע 200'}", "",
+         "🏢 פונדמנטלי:"]
+    def pct(k):
+        v = info.get(k)
+        return f"{v:.0%}" if isinstance(v, (int, float)) else "אין נתון"
+    cap = info.get("marketCap")
+    L += [f"• סקטור: {qa['sector']}" + (f" | שווי שוק: {cap / 1e9:,.1f} מיליארד" if cap else ""),
+          f"• מכפיל רווח: {info.get('trailingPE', 0):.1f}" if isinstance(info.get("trailingPE"), (int, float))
+          else "• מכפיל רווח: אין נתון",
+          f"• שולי רווח: {pct('profitMargins')} | תשואה להון: {pct('returnOnEquity')} | צמיחת הכנסות: {pct('revenueGrowth')}",
+          f"• בדיקת האיכות של הבוט: {'✅ עוברת' if qa['ok'] else '❌ נכשלת ב' + ', '.join(qa['failed']) if qa['n'] else 'אין נתונים'}",
+          f"• דוח כספי הבא: {f'בעוד {de} ימים' if de is not None else 'לא ידוע' + (' (בדוק במאיה)' if mkt == 'TA' else '')}"]
+    tgt = info.get("targetMeanPrice")
+    if isinstance(tgt, (int, float)) and info.get("numberOfAnalystOpinions"):
+        L.append(f"• יעד ממוצע של {info['numberOfAnalystOpinions']} אנליסטים: {fmt(tgt, cur)} ({tgt / c - 1:+.0%})")
+    rn = reddit_note(sym, reddit_map())
+    if rn:
+        L.append("• " + rn)
+
+    L += ["", "🤖 דעת הבוט:"]
+    if sig:
+        names = {"pullback": "קנייה בתיקון", "breakout": "פריצה", "post_earnings": "תגובה חזקה לדוח"}
+        stop = float(initial_stop(d, i))
+        limit = c + LIMIT_ATR * float(row["atr"])
+        _, _, equity = manual_snapshot(state, pos)
+        per = (c - stop) * rate
+        qty = int(min(equity * RISK_PER_TRADE / per, equity * MAX_POSITION_PCT / (c * rate), state["cash"] / (c * rate))) if per > 0 else 0
+        L += [f"🎯 יש איתות היום: {names[sig]}.",
+              f"אם היית פועל לפי הכללים: עד {qty} מניות, לא לקנות מעל {fmt(limit, cur)}, סטופ {fmt(stop, cur)} "
+              f"(-{(c - stop) / c:.1%}), סיכון כ-{money(qty * per)}."]
+        if not mkt_ok:
+            L.append("⚠️ אבל השוק מתחת לממוצע 200, כך שהבוט עצמו לא היה קונה.")
+        if sig != "post_earnings" and de is not None and de <= EARNINGS_BLACKOUT_DAYS:
+            L.append(f"⚠️ אבל יש דוח בעוד {de} ימים, כך שהבוט עצמו היה מחכה.")
+        if not qa["ok"] and qa["n"]:
+            L.append("⚠️ אבל המניה נכשלת בבדיקת האיכות, כך שהבוט עצמו היה מדלג.")
+    else:
+        L.append(f"אין איתות כניסה היום. {verdict}.")
+        L.append(f"אם תקנה בכל זאת, סטופ סביר לפי התנודתיות: כ-{fmt(c - ATR_STOP_MULT * float(row['atr']), cur)}.")
+    if sym in pos:
+        p = pos[sym]
+        L.append(f"💼 בתיק שלך: {int(p['shares'])} מניות, ממוצע {fmt(p['avg_price'], cur)} ({c / p['avg_price'] - 1:+.1%}).")
+    L += ["", "ניתוח אוטומטי לפי נתוני Yahoo, לא ייעוץ השקעות."]
+    return "\n".join(L)
 
 
 # ===================== דוחות =====================
@@ -397,6 +497,12 @@ def main():
         if o["cmd"] == "help":
             out.append(HELP)
             continue
+        if o["cmd"] == "analyze":
+            try:
+                out.append(analyze_text(o["sym"], state, pos))
+            except Exception as e:
+                out.append(f"⚠️ הניתוח של {o['sym']} נכשל: {e}")
+            continue
         if o["cmd"] == "status":
             out.append(status_text(state, pos))
             continue
@@ -409,7 +515,7 @@ def main():
             out.append(f"🗑️ בוטלו {n} פקודות ממתינות." if n else "אין פקודות ממתינות.")
             continue
         if o["cmd"] == "usage":
-            out.append("כתוב את הפקודה עם הסימבול, למשל:\n/buy TEVA.TA 100\n/buy AAPL 5000ש\"ח\n/sell TEVA.TA")
+            out.append("כתוב את הפקודה עם הסימבול, למשל:\n/buy TEVA.TA 100\n/buy AAPL 5000ש\"ח\n/sell TEVA.TA\n/analyze NVDA")
             continue
         if o["cmd"] == "unknown":
             out.append(f"🤔 לא הבנתי את \"{text}\". שלח עזרה לרשימת הפקודות.")

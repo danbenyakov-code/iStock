@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: "*/30 6-20 * * 1-5"
   workflow_dispatch:
+    inputs:
+      status:
+        description: "Send my portfolio status"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -18,6 +23,7 @@ jobs:
         run: python3 check_inbox.py >> "$GITHUB_OUTPUT"
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          FORCE_STATUS: ${{ inputs.status && '1' || '0' }}
       - uses: actions/setup-python@v5
         if: steps.inbox.outputs.work == '1'
         with:
@@ -28,6 +34,7 @@ jobs:
       - if: steps.inbox.outputs.work == '1'
         run: python manual.py
         env:
+          FORCE_STATUS: ${{ inputs.status && '1' || '0' }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       - name: Save logs

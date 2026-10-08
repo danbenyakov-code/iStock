@@ -705,6 +705,11 @@ def main():
                                           "details": txt.replace("\n", " | ")})
         out.append(txt)
 
+    if os.environ.get("FORCE_STATUS") == "1":       # הרצה ידנית שמבקשת דוח מצב
+        txt = status_text(state, pos)
+        out.append(txt)
+        os.makedirs(DIR, exist_ok=True)
+        open(f"{DIR}/status.md", "w", encoding="utf-8").write(txt)
     save_positions(pos)
     _, _, equity = manual_snapshot(state, pos)
     state["peak"] = max(state.get("peak", equity), equity)

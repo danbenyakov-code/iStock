@@ -176,8 +176,14 @@ def main():
              "R = הסכום שסיכנת בעסקה. +0.3R בממוצע = רווח של 30% מהסיכון לכל עסקה.",
              "לא נבדק היסטורית: סינון האיכות (אין נתוני עבר אמינים) ודירוג החוזק.",
              "ביצועי עבר אינם מבטיחים ביצועים עתידיים."]
+    cmp_text = compare(data)
     send("\n".join(lines))
-    send(compare(data))
+    send(cmp_text)
+    import os, datetime as _dt
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/backtest.md", "w", encoding="utf-8") as f:
+        f.write(f"# בדיקה היסטורית | {_dt.date.today():%d/%m/%Y}\n\n```\n" + "\n".join(lines)
+                + "\n```\n\n```\n" + cmp_text + "\n```\n")
 
 
 def compare(data):

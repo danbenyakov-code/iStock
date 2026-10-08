@@ -154,6 +154,7 @@ HELP = ("📘 פקודות לתיק שלי (אפשר גם דרך התפריט / 
         "/sell TEVA.TA 40: מכירה חלקית\n"
         "/cancel: ביטול פקודות שממתינות לפתיחה\n"
         "/status: שווי, רווח ותשואה של שני התיקים\n"
+        "/reset: איפוס התיק שלי ל-50,000 ₪\n"
         "/analyze NVDA: ניתוח מלא של מניה (טכני, פונדמנטלי, ודעת הבוט)\n"
         "אפשר גם בעברית: קנה, מכור, ביטול, מצב.\n"
         "רשימה: כתוב 'קנייה' ובשורות הבאות מניה בכל שורה. בלי סכום = חלוקה שווה של המזומן.\n"
@@ -168,16 +169,17 @@ COMMANDS = [("buy", "קנייה: /buy TEVA.TA 100 או /buy AAPL 5000ש\"ח"),
             ("status", "מצב התיק שלי ותיק הבוט"),
             ("analyze", "ניתוח מניה: /analyze NVDA או /analyze TEVA.TA"),
             ("cancel", "ביטול פקודות ממתינות"),
+            ("reset", "איפוס התיק שלי ל-50,000 ₪"),
             ("help", "רשימת הפקודות")]
 
 
 def set_commands(state):
     """רושם את תפריט ה-/ בטלגרם (פעם אחת)."""
-    if state.get("commands_v") == 2 or not os.environ.get("TELEGRAM_TOKEN"):
+    if state.get("commands_v") == 3 or not os.environ.get("TELEGRAM_TOKEN"):
         return
     tg("setMyCommands", commands=json.dumps([{"command": c, "description": d} for c, d in COMMANDS],
                                             ensure_ascii=False))
-    state["commands_v"] = 2
+    state["commands_v"] = 3
 
 
 # שמות חברות נפוצים -> סימבול (כולל עברית). מוצג תמיד בתשובה, כך שרואים מה הובן.
@@ -270,6 +272,10 @@ def parse(text):
         return {"cmd": "help"}
     if low in ("ביטול", "cancel", "/cancel"):
         return {"cmd": "cancel"}
+    if low in ("/reset", "איפוס"):
+        return {"cmd": "reset_ask"}
+    if low in ("/reset אישור", "איפוס אישור", "/reset confirm"):
+        return {"cmd": "reset"}
     m = re.match(r"^/?(קנה|קני|buy|מכור|sell)\s+([^\s\d][^\s]*)(?:\s+(\d+(?:\.\d+)?))?\s*(ש\"?ח|nis|ils)?$",
                  t, re.IGNORECASE)
     if not m:
@@ -391,6 +397,14 @@ def run_batch(o, text, rec, state, pos):
         share = max(state["cash"] - fixed, 0) / len(free) if free else 0
         if free:
             lines.append(f"חלוקה שווה: כ-{money(share)} לכל אחת מ-{len(free)} מניות")
+    pending_syms = {p["sym"] for p in state.get("pending", []) if p.get("cmd") == o["side"]}
+    dup = [g[0] for g in good if g[0] in pending_syms]
+    if dup:
+        lines.append(f"⚠️ כבר ממתינות פקודות על {', '.join(dup)}, דילגתי עליהן כדי לא לקנות פעמיים")
+        good = [g for g in good if g[0] not in pending_syms]
+        free = [g for g in good if g[1] is None]
+        if o["side"] == "buy" and free:
+            share = max(state["cash"] - fixed - sum(p.get("amount") or 0 for p in state["pending"]), 0) / len(free)
     done = queued = 0
     for sym, num, is_ils in good:
         if o["side"] == "buy":
@@ -555,12 +569,16 @@ def status_text(state, pos):
     rows, invested, equity = manual_snapshot(state, pos)
     total = equity / state["start_capital"] - 1
     trades = read_csv(TRADES)
+    resets = [k for k, t in enumerate(trades) if t["side"] == "איפוס"]
+    if resets:                                    # סופרים רק מאז האיפוס האחרון
+        trades = trades[resets[-1] + 1:]
     sells = [t for t in trades if t["side"] == "מכירה"]
     realized = sum(float(t["pnl_ils"] or 0) for t in sells)
     wins = sum(1 for t in sells if float(t["pnl_ils"] or 0) > 0)
     L = [f"👤 התיק שלי | {il_time()}",
          f"💼 שווי: {money(equity)} | תשואה: {equity - state['start_capital']:+,.0f} ₪ ({total:+.2%})",
          f"מזומן: {money(state['cash'])} | מושקע: {money(invested)} | פוזיציות: {len(pos)}",
+         f"עמלות ששולמו: {sum(float(t.get('commission_ils') or 0) for t in trades):,.0f} ₪ | "
          f"רווח ממומש: {realized:+,.0f} ₪ | עסקאות סגורות: {len(sells)}"
          + (f" | הצלחה {wins / len(sells):.0%}" if sells else "")]
     if rows:
@@ -629,6 +647,22 @@ def main():
         o = parse(text)
         if o["cmd"] == "help":
             out.append(HELP)
+            continue
+        if o["cmd"] == "reset_ask":
+            out.append("⚠️ איפוס ימכור הכול, ימחק את הפוזיציות ויחזיר את התיק ל-50,000 ₪ מזומן.\n"
+                       "היסטוריית העסקאות תישמר ביומן. לאישור שלח: /reset אישור")
+            continue
+        if o["cmd"] == "reset":
+            changelog(f"♻️ איפוס התיק. שווי לפני האיפוס: {money(manual_snapshot(state, pos)[2])}")
+            pos.clear()
+            keep = {k: state[k] for k in ("offset", "commands_v") if k in state}
+            state.clear()
+            state.update(load_state.__wrapped__() if hasattr(load_state, "__wrapped__") else {
+                "cash": float(CAPITAL_ILS), "start_capital": float(CAPITAL_ILS),
+                "start_date": now().strftime("%Y-%m-%d"), "pending": [], "peak": float(CAPITAL_ILS)})
+            state.update(keep)
+            append_csv(TRADES, TRADE_F, {"time": il_time(), "side": "איפוס", "symbol": "-", "shares": 0})
+            out.append("♻️ התיק אופס: 50,000 ₪ מזומן, אין פוזיציות. אפשר להתחיל מחדש.")
             continue
         if o["cmd"] == "ask":
             out.append(o["text"])

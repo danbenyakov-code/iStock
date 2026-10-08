@@ -9,5 +9,6 @@
  },
  "done_date": "2026-10-08",
  "done_tg": [],
- "done_cl": []
+ "done_cl": [],
+ "stale": false
 }

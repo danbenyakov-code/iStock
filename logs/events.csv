@@ -6,3 +6,9 @@ date,mode,event,symbol,details
 2026-10-07,paper,ENTRY_SIGNAL,CIEN,breakout close=443.65 rs=-3.9 planned
 2026-10-07,paper,ENTRY_SIGNAL,AIZ,pullback close=270.96 rs=-6.7 planned
 2026-10-07,paper,ENTRY_SIGNAL,KVUE,pullback close=17.59 rs=-11.2 planned
+2026-10-08,paper,BLOCKED,JNJ,pullback earnings in 5d
+2026-10-08,paper,BLOCKED,VST,breakout quality ['חוב']
+2026-10-08,paper,ENTRY_SIGNAL,DXCM,pullback close=84.30 rs=12.0 planned
+2026-10-08,paper,ENTRY_SIGNAL,ROST,pullback close=225.53 rs=-1.0 planned
+2026-10-08,paper,ENTRY_SIGNAL,VRTX,pullback close=505.64 rs=-1.6 planned
+2026-10-08,paper,ENTRY_SIGNAL,CVS,pullback close=87.95 rs=-17.3 planned

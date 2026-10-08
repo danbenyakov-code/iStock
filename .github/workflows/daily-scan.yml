@@ -2,6 +2,7 @@ name: Daily scan
 on:
   schedule:
     - cron: "0 22 * * 1-5"
+    - cron: "30 4 * * 2-6"   # 01:00 לפי שעון ישראל, אחרי סגירת שני השווקים
   workflow_dispatch:
 permissions:
   contents: write
@@ -20,6 +21,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RETRY: ${{ github.event.schedule == '30 4 * * 2-6' && '1' || '0' }}
       - name: Save logs
         run: |
           git config user.name "trading-bot"

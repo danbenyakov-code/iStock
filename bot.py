@@ -176,7 +176,9 @@ def find_candidates(t, taken, market, idx_dfs, mode, fx=3.7):
         d = ind(sym)
         if d is None:
             continue
-        if (t - d.index[-1]).days > 1 or not market[market_of(sym)]:
+        idx = idx_dfs.get(market_of(sym))
+        last_ok = idx is None or d.index[-1] >= idx.index[-1]
+        if not last_ok or not market[market_of(sym)]:
             continue
         i = len(d) - 1
         if not liquid(sym, d, fx):
@@ -303,7 +305,11 @@ def run_paper(t, fx, market, idx_dfs, rmap, warnings):
             continue
         d0, px = next_open(sym, en["signal_date"])
         if d0 is None:
-            keep.append(en)
+            if (t - pd.Timestamp(en["signal_date"])).days > 6:
+                done.append(f"⏭️ בוטלה פקודה ל-{sym}: אין מחיר פתיחה כבר כמה ימים")
+                log_event(mode, "SKIP", sym, "expired, no open price")
+            else:
+                keep.append(en)
             continue
         skip = None
         if px > en["limit"]:
@@ -378,12 +384,7 @@ def run_paper(t, fx, market, idx_dfs, rmap, warnings):
         if p["symbol"] not in exiting:
             sec = quality(p["symbol"])["sector"]
             sectors[sec] = sectors.get(sec, 0) + 1
-    waiting = []                                       # פקודות שעוד מחכות ליום מסחר
-    for e in pending["entries"]:
-        d = ind(e["symbol"])
-        if d is not None and e["signal_date"] != f"{d.index[-1]:%Y-%m-%d}":
-            waiting.append(e)
-    pending["entries"] = waiting
+    waiting = pending["entries"]                       # פקודות שעוד מחכות לפתיחה: נשמרות
     taken = {p["symbol"] for p in positions} | {e["symbol"] for e in waiting}
     cands, blocked = find_candidates(t, taken, market, idx_dfs, mode, fx)
     orders, cl_orders = [], []
@@ -569,9 +570,23 @@ def run_real(t, fx, market, idx_dfs, rmap, warnings):
     return finish(t, L, research_md, ai_text)
 
 
+def expected_us_session():
+    """יום המסחר האחרון בארה"ב שאמור להיות סגור (בקירוב, בלי חגים)."""
+    d = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=21)).normalize().tz_localize(None)
+    while d.weekday() >= 5:
+        d -= pd.Timedelta(days=1)
+    return d
+
+
 def main():
     global UNIVERSE
     t = today()
+    retry = os.environ.get("RETRY") == "1"
+    st_path = F["state"]
+    st = json.load(open(st_path, encoding="utf-8")) if os.path.exists(st_path) else {}
+    if retry and not st.get("stale"):
+        print("retry run: last scan was fresh, nothing to do")
+        return
     ta, us = universe.get()
     held = [r["symbol"] for r in read_csv(F["pos"])] + [r["symbol"] for r in read_csv("positions.csv")]
     UNIVERSE = sorted(set(ta) | set(us) | set(held))
@@ -588,6 +603,11 @@ def main():
         market[m] = bool(market_ok_series(idx).iloc[-1]) if idx is not None else False
         if idx is None:
             warnings.append(f"אין נתוני מדד {sym}")
+    us_idx = idx_dfs.get("US")
+    stale = us_idx is not None and us_idx.index[-1] < expected_us_session()
+    if stale:
+        warnings.append(f"נתוני Yahoo עוד לא כוללים את יום המסחר האחרון (הנתון האחרון: "
+                        f"{us_idx.index[-1]:%d/%m}). אריץ שוב אוטומטית בעוד כמה שעות")
     rmap = reddit_map()
     run = run_paper if PAPER_MODE else run_real
     msgs = run(t, fx, market, idx_dfs, rmap, warnings)
@@ -599,6 +619,12 @@ def main():
             msgs.append(mine)
     except Exception as e:
         print("manual summary failed:", e)
+    if os.path.exists(st_path):
+        st = json.load(open(st_path, encoding="utf-8"))
+        st["stale"] = bool(stale)
+        json.dump(st, open(st_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if retry:
+        msgs[0] = "🔁 הרצה חוזרת אחרי עדכון הנתונים\n" + msgs[0]
     for msg in msgs:
         send(msg)
 

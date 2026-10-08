@@ -328,6 +328,9 @@ def execute(order, state, pos):
         qty = int(order["qty"]) if order.get("qty") else \
             int(min(order["amount"], state["cash"]) / (px_ils * (1 + SIDE_FEE)))
         if qty <= 0:
+            if order.get("amount") and state["cash"] < order["amount"]:
+                return (f"❌ לא נקנה {sym}: נשארו רק {money(state['cash'])} מזומן, "
+                        f"ומניה אחת עולה {money(px_ils)}."), "rejected"
             return f"❌ הסכום קטן ממחיר מניה אחת של {sym} ({money(px_ils)}).", "rejected"
         value = qty * px_ils
         fee = value * SIDE_FEE

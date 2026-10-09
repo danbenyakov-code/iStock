@@ -12,3 +12,33 @@ date,mode,event,symbol,details
 2026-10-08,paper,ENTRY_SIGNAL,ROST,pullback close=225.53 rs=-1.0 planned
 2026-10-08,paper,ENTRY_SIGNAL,VRTX,pullback close=505.64 rs=-1.6 planned
 2026-10-08,paper,ENTRY_SIGNAL,CVS,pullback close=87.95 rs=-17.3 planned
+2026-10-09,paper,BUY,DXCM,84.01 x38 stop=79.71
+2026-10-09,paper,BUY,ROST,224.78 x14 stop=215.33
+2026-10-09,paper,BUY,VRTX,503.14 x6 stop=482.43
+2026-10-09,paper,BUY,CVS,87.86 x37 stop=83.57
+2026-10-09,paper,BLOCKED,EG,pullback quality ['צמיחת הכנסות']
+2026-10-09,paper,BLOCKED,EXPE,pullback quality ['חוב']
+2026-10-09,paper,BLOCKED,FANG,pullback quality ['תשואה להון']
+2026-10-09,paper,BLOCKED,GPN,"pullback quality ['רווחיות', 'תשואה להון']"
+2026-10-09,paper,BLOCKED,MMM,pullback quality ['חוב']
+2026-10-09,paper,BLOCKED,SJM,pullback quality ['תשואה להון']
+2026-10-09,paper,ENTRY_SIGNAL,PLTR,breakout close=198.78 rs=54.3 planned
+2026-10-09,paper,ENTRY_SIGNAL,NEM,pullback close=115.55 rs=19.0 planned
+2026-10-09,paper,ENTRY_SIGNAL,TGT,pullback close=154.76 rs=12.9 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,SOLV,pullback close=86.41 rs=10.2 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,DGX,pullback close=230.81 rs=9.2 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,ALLE,pullback close=149.99 rs=7.7 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,VZ,pullback close=46.35 rs=7.5 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,BBY,pullback close=88.40 rs=5.4 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,MDT,pullback close=87.75 rs=3.0 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,WTW,pullback close=297.86 rs=0.7 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,PKG,pullback close=229.94 rs=-1.3 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,MO,breakout close=71.42 rs=-1.4 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,HSIC,pullback close=84.63 rs=-2.2 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,AMCR,pullback close=41.88 rs=-4.1 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,PAYX,pullback close=104.46 rs=-4.4 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,UNP,pullback close=278.20 rs=-5.1 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,CSX,pullback close=47.34 rs=-6.4 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,GL,pullback close=166.08 rs=-9.6 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,AJG,pullback close=234.05 rs=-9.8 אין מספיק מזומן
+2026-10-09,paper,ENTRY_SIGNAL,ALL,pullback close=230.63 rs=-10.5 אין מספיק מזומן

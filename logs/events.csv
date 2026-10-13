@@ -42,3 +42,9 @@ date,mode,event,symbol,details
 2026-10-09,paper,ENTRY_SIGNAL,GL,pullback close=166.08 rs=-9.6 אין מספיק מזומן
 2026-10-09,paper,ENTRY_SIGNAL,AJG,pullback close=234.05 rs=-9.8 אין מספיק מזומן
 2026-10-09,paper,ENTRY_SIGNAL,ALL,pullback close=230.63 rs=-10.5 אין מספיק מזומן
+2026-10-13,paper,BUY,PLTR,201.48 x10 stop=186.15
+2026-10-13,paper,SKIP,NEM,"נפתח ב-$117.58, מעל מחיר המקסימום $117.43. לא רודפים"
+2026-10-13,paper,BLOCKED,MSI,pullback quality ['חוב']
+2026-10-13,paper,ENTRY_SIGNAL,CCI,breakout close=81.01 rs=0.5 planned
+2026-10-13,paper,ENTRY_SIGNAL,GL,pullback close=165.12 rs=-11.1 אין מספיק מזומן
+2026-10-13,paper,ENTRY_SIGNAL,SPG,pullback close=201.41 rs=-11.5 אין מספיק מזומן

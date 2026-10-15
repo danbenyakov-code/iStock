@@ -48,3 +48,4 @@ date,mode,event,symbol,details
 2026-10-13,paper,ENTRY_SIGNAL,CCI,breakout close=81.01 rs=0.5 planned
 2026-10-13,paper,ENTRY_SIGNAL,GL,pullback close=165.12 rs=-11.1 אין מספיק מזומן
 2026-10-13,paper,ENTRY_SIGNAL,SPG,pullback close=201.41 rs=-11.5 אין מספיק מזומן
+2026-10-15,paper,BUY,CCI,81.99 x20 stop=76.03

@@ -51,3 +51,4 @@ date,mode,event,symbol,details
 2026-10-15,paper,BUY,CCI,81.99 x20 stop=76.03
 2026-10-20,paper,EXIT_SIGNAL,PLTR,סטופ התחלתי (קטיעת הפסד): סגירה $186.03 מתחת ל-$186.15
 2026-10-21,paper,SELL,PLTR,186.99 x10 pnl=-436
+2026-10-22,paper,ENTRY_SIGNAL,MTRX.TA,breakout close=10740.00 rs=23.9 planned

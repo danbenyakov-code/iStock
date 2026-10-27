@@ -55,3 +55,4 @@ date,mode,event,symbol,details
 2026-10-23,paper,BUY,MTRX.TA,10740.00 x55 stop=10002.72
 2026-10-23,paper,ENTRY_SIGNAL,IDIN.TA,breakout close=26030.00 rs=4.3 אין מספיק מזומן
 2026-10-24,paper,EXIT_SIGNAL,DXCM,סטופ התחלתי (קטיעת הפסד): סגירה $78.32 מתחת ל-$79.71
+2026-10-27,paper,SELL,DXCM,78.68 x38 pnl=-608

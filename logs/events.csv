@@ -56,3 +56,9 @@ date,mode,event,symbol,details
 2026-10-23,paper,ENTRY_SIGNAL,IDIN.TA,breakout close=26030.00 rs=4.3 אין מספיק מזומן
 2026-10-24,paper,EXIT_SIGNAL,DXCM,סטופ התחלתי (קטיעת הפסד): סגירה $78.32 מתחת ל-$79.71
 2026-10-27,paper,SELL,DXCM,78.68 x38 pnl=-608
+2026-10-28,paper,BLOCKED,ELTR.TA,"breakout quality ['רווחיות', 'חוב']"
+2026-10-28,paper,ENTRY_SIGNAL,NICE.TA,breakout close=37750.00 rs=29.1 planned
+2026-10-28,paper,ENTRY_SIGNAL,TASE.TA,breakout close=15650.00 rs=24.5 אין מספיק מזומן
+2026-10-28,paper,ENTRY_SIGNAL,FORTY.TA,breakout close=39650.00 rs=19.4 אין מספיק מזומן
+2026-10-28,paper,ENTRY_SIGNAL,IDIN.TA,breakout close=26230.00 rs=5.1 אין מספיק מזומן
+2026-10-28,paper,ENTRY_SIGNAL,MVNE.TA,breakout close=1385.00 rs=5.0 אין מספיק מזומן

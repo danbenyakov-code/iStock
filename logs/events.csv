@@ -67,3 +67,5 @@ date,mode,event,symbol,details
 2026-10-29,paper,ENTRY_SIGNAL,FORTY.TA,breakout close=39650.00 rs=19.4 אין מספיק מזומן
 2026-10-29,paper,ENTRY_SIGNAL,IDIN.TA,breakout close=26230.00 rs=5.1 אין מספיק מזומן
 2026-10-29,paper,ENTRY_SIGNAL,MVNE.TA,breakout close=1385.00 rs=5.0 אין מספיק מזומן
+2026-10-30,paper,BUY,NICE.TA,37220.00 x22 stop=34906.21
+2026-10-30,paper,SKIP,TASE.TA,אין מספיק מזומן

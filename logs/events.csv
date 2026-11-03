@@ -98,3 +98,29 @@ date,mode,event,symbol,details
 2026-10-31,paper,ENTRY_SIGNAL,GD,breakout close=372.59 rs=-1.8 אין מספיק מזומן
 2026-10-31,paper,ENTRY_SIGNAL,KIM,breakout close=24.52 rs=-2.1 אין מספיק מזומן
 2026-10-31,paper,ENTRY_SIGNAL,DXCM,pullback close=82.29 rs=-5.5 אין מספיק מזומן
+2026-11-03,paper,SELL,ROST,229.26 x14 pnl=446
+2026-11-03,paper,SELL,CVS,90.23 x37 pnl=533
+2026-11-03,paper,BUY,VLO,392.68 x5 stop=363.66
+2026-11-03,paper,BUY,LLY,1393.15 x2 stop=1327.72
+2026-11-03,paper,BUY,CVX,232.50 x8 stop=226.36
+2026-11-03,paper,BLOCKED,ARES,breakout quality ['צמיחת הכנסות']
+2026-11-03,paper,BLOCKED,BAX,"pullback quality ['רווחיות', 'תשואה להון']"
+2026-11-03,paper,BLOCKED,DD,breakout earnings in 0d
+2026-11-03,paper,BLOCKED,GPC,pullback quality ['תשואה להון']
+2026-11-03,paper,BLOCKED,IT,breakout earnings in 0d
+2026-11-03,paper,BLOCKED,KDP,breakout earnings in 0d
+2026-11-03,paper,BLOCKED,SHW,breakout quality ['חוב']
+2026-11-03,paper,BLOCKED,SOLV,pullback earnings in 2d
+2026-11-03,paper,BLOCKED,SW,breakout quality ['תשואה להון']
+2026-11-03,paper,ENTRY_SIGNAL,TYL,breakout close=403.94 rs=31.4 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,REGN,breakout close=961.26 rs=29.0 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,MAR,breakout close=416.30 rs=23.4 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,VLTO,breakout close=115.70 rs=22.6 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,IDXX,post_earnings close=671.64 rs=16.7 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,AJG,breakout close=278.89 rs=15.3 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,CVNA,breakout close=72.00 rs=8.4 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,LNT,breakout close=73.02 rs=6.7 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,DOV,breakout close=215.91 rs=5.6 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,CCL,breakout close=30.05 rs=4.6 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,AMZN,pullback close=245.63 rs=-8.9 אין מספיק מזומן
+2026-11-03,paper,ENTRY_SIGNAL,GL,pullback close=159.79 rs=-10.4 אין מספיק מזומן

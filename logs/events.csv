@@ -127,3 +127,6 @@ date,mode,event,symbol,details
 2026-11-05,paper,EXIT_SIGNAL,CCI,יציאה בזמן: 15 ימי מסחר בלי התקדמות של 1R (+5.6%)
 2026-11-05,paper,EXIT_SIGNAL,NICE.TA,"סטופ התחלתי (קטיעת הפסד): סגירה 33,400.0 אג' מתחת ל-34,906.2 אג'"
 2026-11-05,paper,EXIT_SIGNAL,CVX,סטופ התחלתי (קטיעת הפסד): סגירה $225.27 מתחת ל-$226.36
+2026-11-06,paper,SELL,CCI,87.84 x20 pnl=539
+2026-11-06,paper,SELL,NICE.TA,33650.00 x22 pnl=-810
+2026-11-06,paper,SELL,CVX,222.56 x8 pnl=-165

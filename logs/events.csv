@@ -130,3 +130,4 @@ date,mode,event,symbol,details
 2026-11-06,paper,SELL,CCI,87.84 x20 pnl=539
 2026-11-06,paper,SELL,NICE.TA,33650.00 x22 pnl=-810
 2026-11-06,paper,SELL,CVX,222.56 x8 pnl=-165
+2026-11-07,paper,EXIT_SIGNAL,VLO,סטופ התחלתי (קטיעת הפסד): סגירה $351.23 מתחת ל-$363.66

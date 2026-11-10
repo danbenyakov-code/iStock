@@ -131,3 +131,23 @@ date,mode,event,symbol,details
 2026-11-06,paper,SELL,NICE.TA,33650.00 x22 pnl=-810
 2026-11-06,paper,SELL,CVX,222.56 x8 pnl=-165
 2026-11-07,paper,EXIT_SIGNAL,VLO,סטופ התחלתי (קטיעת הפסד): סגירה $351.23 מתחת ל-$363.66
+2026-11-10,paper,SELL,VLO,353.23 x5 pnl=-623
+2026-11-10,paper,BLOCKED,CLX,breakout quality ['חוב']
+2026-11-10,paper,BLOCKED,CRWD,pullback quality ['תשואה להון']
+2026-11-10,paper,BLOCKED,IVZ,"pullback quality ['רווחיות', 'תשואה להון']"
+2026-11-10,paper,BLOCKED,TRGP,pullback quality ['חוב']
+2026-11-10,paper,ENTRY_SIGNAL,BEN,breakout close=35.87 rs=10.9 planned
+2026-11-10,paper,ENTRY_SIGNAL,AMD,pullback close=508.58 rs=9.5 planned
+2026-11-10,paper,ENTRY_SIGNAL,META,pullback close=641.37 rs=9.4 planned
+2026-11-10,paper,ENTRY_SIGNAL,EXPD,pullback close=189.59 rs=9.3 planned
+2026-11-10,paper,ENTRY_SIGNAL,NDSN,pullback close=323.84 rs=6.6 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,FERG,post_earnings close=259.93 rs=6.0 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,ADI,pullback close=394.66 rs=5.0 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,ALGN,breakout close=174.26 rs=3.1 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,MPWR,breakout close=1388.05 rs=1.5 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,AME,pullback close=238.24 rs=-4.6 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,NUE,pullback close=249.24 rs=-5.8 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,STT,pullback close=170.88 rs=-5.9 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,JCI,pullback close=141.49 rs=-6.0 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,GL,pullback close=161.83 rs=-8.1 אין מספיק מזומן
+2026-11-10,paper,ENTRY_SIGNAL,STLD,pullback close=227.56 rs=-11.2 אין מספיק מזומן

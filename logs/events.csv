@@ -151,3 +151,10 @@ date,mode,event,symbol,details
 2026-11-10,paper,ENTRY_SIGNAL,JCI,pullback close=141.49 rs=-6.0 אין מספיק מזומן
 2026-11-10,paper,ENTRY_SIGNAL,GL,pullback close=161.83 rs=-8.1 אין מספיק מזומן
 2026-11-10,paper,ENTRY_SIGNAL,STLD,pullback close=227.56 rs=-11.2 אין מספיק מזומן
+2026-11-11,paper,BUY,BEN,35.85 x68 stop=33.54
+2026-11-11,paper,BUY,AMD,502.80 x2 stop=431.14
+2026-11-11,paper,BUY,EXPD,188.25 x15 stop=178.27
+2026-11-11,paper,BLOCKED,CLX,breakout quality ['חוב']
+2026-11-11,paper,BLOCKED,TTWO,"post_earnings quality ['רווחיות', 'תשואה להון', 'צמיחת הכנסות']"
+2026-11-11,paper,ENTRY_SIGNAL,AIZ,breakout close=322.16 rs=17.9 planned
+2026-11-11,paper,ENTRY_SIGNAL,OKE,pullback close=87.37 rs=-1.5 אין מספיק מזומן

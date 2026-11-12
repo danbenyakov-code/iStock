@@ -158,3 +158,21 @@ date,mode,event,symbol,details
 2026-11-11,paper,BLOCKED,TTWO,"post_earnings quality ['רווחיות', 'תשואה להון', 'צמיחת הכנסות']"
 2026-11-11,paper,ENTRY_SIGNAL,AIZ,breakout close=322.16 rs=17.9 planned
 2026-11-11,paper,ENTRY_SIGNAL,OKE,pullback close=87.37 rs=-1.5 אין מספיק מזומן
+2026-11-12,paper,BUY,META,637.98 x2 stop=591.23
+2026-11-12,paper,SKIP,AIZ,אין מספיק מזומן
+2026-11-12,paper,BLOCKED,P,pullback earnings in 6d
+2026-11-12,paper,BLOCKED,PANW,pullback earnings in 6d
+2026-11-12,paper,BLOCKED,TTWO,"breakout quality ['רווחיות', 'תשואה להון', 'צמיחת הכנסות']"
+2026-11-12,paper,BLOCKED,VTRS,"breakout quality ['רווחיות', 'תשואה להון']"
+2026-11-12,paper,ENTRY_SIGNAL,MPC,pullback close=402.84 rs=15.7 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,PSX,pullback close=258.68 rs=14.1 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,CVX,pullback close=213.28 rs=11.1 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,VLO,pullback close=363.71 rs=8.4 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,XOM,pullback close=166.71 rs=8.1 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,IT,pullback close=193.00 rs=7.6 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,PLTR,pullback close=172.40 rs=-1.4 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,HPQ,pullback close=28.96 rs=-4.3 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,NTAP,pullback close=183.12 rs=-8.2 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,TWLO,pullback close=219.48 rs=-9.7 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,MU,pullback close=811.30 rs=-12.3 אין מספיק מזומן
+2026-11-12,paper,ENTRY_SIGNAL,HPE,pullback close=50.25 rs=-13.5 אין מספיק מזומן

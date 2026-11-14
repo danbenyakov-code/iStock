@@ -176,3 +176,4 @@ date,mode,event,symbol,details
 2026-11-12,paper,ENTRY_SIGNAL,TWLO,pullback close=219.48 rs=-9.7 אין מספיק מזומן
 2026-11-12,paper,ENTRY_SIGNAL,MU,pullback close=811.30 rs=-12.3 אין מספיק מזומן
 2026-11-12,paper,ENTRY_SIGNAL,HPE,pullback close=50.25 rs=-13.5 אין מספיק מזומן
+2026-11-14,paper,EXIT_SIGNAL,MTRX.TA,יציאה בזמן: 15 ימי מסחר בלי התקדמות של 1R (+2.9%)

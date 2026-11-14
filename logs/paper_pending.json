@@ -1,4 +1,11 @@
 {
  "entries": [],
- "exits": []
+ "exits": [
+  {
+   "symbol": "MTRX.TA",
+   "signal_date": "2026-11-12",
+   "reason": "time",
+   "why": "יציאה בזמן: 15 ימי מסחר בלי התקדמות של 1R (+2.9%)"
+  }
+ ]
 }

@@ -180,3 +180,4 @@ date,mode,event,symbol,details
 2026-11-17,paper,SELL,MTRX.TA,11050.00 x55 pnl=153
 2026-11-17,paper,BLOCKED,TSN,breakout quality ['תשואה להון']
 2026-11-17,paper,ENTRY_SIGNAL,CHD,breakout close=114.74 rs=19.6 planned
+2026-11-18,paper,BUY,CHD,113.79 x19 stop=109.94

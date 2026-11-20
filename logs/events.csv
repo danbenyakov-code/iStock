@@ -181,3 +181,6 @@ date,mode,event,symbol,details
 2026-11-17,paper,BLOCKED,TSN,breakout quality ['תשואה להון']
 2026-11-17,paper,ENTRY_SIGNAL,CHD,breakout close=114.74 rs=19.6 planned
 2026-11-18,paper,BUY,CHD,113.79 x19 stop=109.94
+2026-11-20,paper,EXIT_SIGNAL,VRTX,יציאה בזמן: 30 ימי מסחר בלי התקדמות של 1R (+3.5%)
+2026-11-20,paper,EXIT_SIGNAL,BEN,סטופ התחלתי (קטיעת הפסד): סגירה $33.27 מתחת ל-$33.54
+2026-11-20,paper,EXIT_SIGNAL,CHD,סטופ התחלתי (קטיעת הפסד): סגירה $109.68 מתחת ל-$109.94

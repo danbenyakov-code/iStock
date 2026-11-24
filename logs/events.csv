@@ -189,3 +189,6 @@ date,mode,event,symbol,details
 2026-11-21,paper,SELL,CHD,110.69 x19 pnl=-119
 2026-11-21,paper,EXIT_SIGNAL,AMD,סטופ נגרר (נעילת רווח): סגירה $424.39 מתחת ל-$449.08
 2026-11-21,paper,EXIT_SIGNAL,META,סטופ התחלתי (קטיעת הפסד): סגירה $560.84 מתחת ל-$591.23
+2026-11-24,paper,SELL,AMD,476.92 x2 pnl=-55
+2026-11-24,paper,SELL,META,591.72 x2 pnl=-161
+2026-11-24,paper,EXIT_SIGNAL,LLY,יציאה בזמן: 15 ימי מסחר בלי התקדמות של 1R (-2.0%)

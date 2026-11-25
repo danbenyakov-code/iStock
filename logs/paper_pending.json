@@ -1,11 +1,4 @@
 {
  "entries": [],
- "exits": [
-  {
-   "symbol": "LLY",
-   "signal_date": "2026-11-23",
-   "reason": "time",
-   "why": "יציאה בזמן: 15 ימי מסחר בלי התקדמות של 1R (-2.0%)"
-  }
- ]
+ "exits": []
 }
